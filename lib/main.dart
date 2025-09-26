@@ -1,122 +1,236 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
 
-void main() {
-  runApp(const MyApp());
+import 'shared/providers/theme_provider.dart';
+import 'features/home/presentation/pages/home_screen.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Configuration de la barre de statut
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+      systemNavigationBarColor: Colors.transparent,
+    ),
+  );
+
+  // Initialiser le provider de thème
+  final themeProvider = ThemeProvider();
+  await themeProvider.initialize();
+
+  runApp(SwipeWipeApp(themeProvider: themeProvider));
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SwipeWipeApp extends StatelessWidget {
+  final ThemeProvider themeProvider;
 
-  // This widget is the root of your application.
+  const SwipeWipeApp({
+    super.key,
+    required this.themeProvider,
+  });
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+    return ChangeNotifierProvider.value(
+      value: themeProvider,
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          return MaterialApp(
+            title: 'SwipeWipe',
+            debugShowCheckedModeBanner: false,
+            
+            // Configuration des thèmes
+            theme: ThemeProvider.lightTheme,
+            darkTheme: ThemeProvider.darkTheme,
+            themeMode: themeProvider.themeMode,
+            
+            // Page d'accueil
+            home: const SwipeWipeHome(),
+            
+            // Configuration des transitions
+            builder: (context, child) {
+              return AnimatedTheme(
+                data: themeProvider.isDarkMode 
+                    ? ThemeProvider.darkTheme 
+                    : ThemeProvider.lightTheme,
+                duration: const Duration(milliseconds: 300),
+                curve: Curves.easeInOut,
+                child: child!,
+              );
+            },
+          );
+        },
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
+class SwipeWipeHome extends StatefulWidget {
+  const SwipeWipeHome({super.key});
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<SwipeWipeHome> createState() => _SwipeWipeHomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+class _SwipeWipeHomeState extends State<SwipeWipeHome>
+    with TickerProviderStateMixin {
+  late AnimationController _splashController;
+  late Animation<double> _splashAnimation;
+  
+  bool _showSplash = true;
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+  @override
+  void initState() {
+    super.initState();
+    
+    _splashController = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    );
+    
+    _splashAnimation = CurvedAnimation(
+      parent: _splashController,
+      curve: Curves.easeInOut,
+    );
+
+    _startSplashSequence();
+  }
+
+  @override
+  void dispose() {
+    _splashController.dispose();
+    super.dispose();
+  }
+
+  void _startSplashSequence() async {
+    // Animation d'entrée du splash
+    await _splashController.forward();
+    
+    // Attendre un peu
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    // Animation de sortie du splash
+    await _splashController.reverse();
+    
+    // Masquer le splash et afficher l'écran principal
+    if (mounted) {
+      setState(() {
+        _showSplash = false;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
+    if (_showSplash) {
+      return _buildSplashScreen(context);
+    }
+    
+    return const HomeScreen();
+  }
+
+  Widget _buildSplashScreen(BuildContext context) {
+    final theme = Theme.of(context);
+    
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
-      ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              theme.colorScheme.primary.withOpacity(0.1),
+              theme.colorScheme.surface,
+              theme.colorScheme.secondary.withOpacity(0.1),
+            ],
+          ),
+        ),
+        child: Center(
+          child: AnimatedBuilder(
+            animation: _splashAnimation,
+            builder: (context, child) {
+              return Transform.scale(
+                scale: 0.5 + (_splashAnimation.value * 0.5),
+                child: Opacity(
+                  opacity: _splashAnimation.value,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Logo avec glow
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: RadialGradient(
+                            colors: [
+                              theme.colorScheme.primary.withOpacity(0.3),
+                              theme.colorScheme.primary.withOpacity(0.1),
+                              Colors.transparent,
+                            ],
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary.withOpacity(0.4),
+                              blurRadius: 30,
+                              spreadRadius: 5,
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: Icon(
+                            Icons.swipe,
+                            size: 60,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 32),
+                      
+                      // Titre
+                      Text(
+                        'SwipeWipe',
+                        style: theme.textTheme.headlineLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: theme.colorScheme.primary,
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 16),
+                      
+                      // Sous-titre
+                      Text(
+                        'Triez vos photos en un geste',
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          color: theme.colorScheme.onSurface.withOpacity(0.7),
+                        ),
+                      ),
+                      
+                      const SizedBox(height: 48),
+                      
+                      // Indicateur de chargement
+                      SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }
