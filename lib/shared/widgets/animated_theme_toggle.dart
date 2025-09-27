@@ -78,8 +78,8 @@ class _AnimatedThemeToggleState extends State<AnimatedThemeToggle>
       curve: Curves.easeInOut,
     ));
 
-    // Animation de glow en boucle
-    _glowController.repeat(reverse: true);
+    // Animation de glow uniquement lors des interactions
+    // _glowController.repeat(reverse: true); // Supprimé pour économiser les ressources
   }
 
   @override
@@ -115,16 +115,22 @@ class _AnimatedThemeToggleState extends State<AnimatedThemeToggle>
   void _handleTapDown(TapDownDetails details) {
     setState(() => _isPressed = true);
     _scaleController.forward();
+    // Démarrer l'animation glow lors de l'interaction
+    _glowController.forward();
   }
 
   void _handleTapUp(TapUpDetails details) {
     setState(() => _isPressed = false);
     _scaleController.reverse();
+    // Arrêter l'animation glow
+    _glowController.reverse();
   }
 
   void _handleTapCancel() {
     setState(() => _isPressed = false);
     _scaleController.reverse();
+    // Arrêter l'animation glow
+    _glowController.reverse();
   }
 
   @override
@@ -134,12 +140,17 @@ class _AnimatedThemeToggleState extends State<AnimatedThemeToggle>
 
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
-        return GestureDetector(
-          onTap: _handleTap,
-          onTapDown: _handleTapDown,
-          onTapUp: _handleTapUp,
-          onTapCancel: _handleTapCancel,
-          child: Container(
+        return Semantics(
+          button: true,
+          label: themeProvider.isDarkMode ? 'Passer au thème clair' : 'Passer au thème sombre',
+          hint: 'Appuyez pour changer le thème de l\'application',
+          value: themeProvider.isDarkMode ? 'Thème sombre activé' : 'Thème clair activé',
+          child: GestureDetector(
+            onTap: _handleTap,
+            onTapDown: _handleTapDown,
+            onTapUp: _handleTapUp,
+            onTapCancel: _handleTapCancel,
+            child: Container(
             padding: widget.padding ?? const EdgeInsets.all(8),
             child: AnimatedBuilder(
               animation: Listenable.merge([
@@ -218,33 +229,49 @@ class _AnimatedThemeToggleState extends State<AnimatedThemeToggle>
   }
 }
 
-/// Version compacte du bouton de thème pour les barres d'outils
+/// Version compacte du bouton de thème avec paramètres configurables
 class CompactThemeToggle extends StatelessWidget {
   final double size;
+  final EdgeInsets? padding;
+  final CompactThemeToggleType type;
 
   const CompactThemeToggle({
     super.key,
     this.size = 32,
+    this.padding,
+    this.type = CompactThemeToggleType.toolbar,
   });
+
+  /// Constructeur pour les barres d'outils
+  const CompactThemeToggle.toolbar({
+    super.key,
+    this.size = 32,
+  }) : padding = const EdgeInsets.all(4),
+       type = CompactThemeToggleType.toolbar;
+
+  /// Constructeur pour les headers
+  const CompactThemeToggle.header({
+    super.key,
+    this.size = 40,
+  }) : padding = const EdgeInsets.all(8),
+       type = CompactThemeToggleType.header;
 
   @override
   Widget build(BuildContext context) {
+    final effectivePadding = padding ?? 
+        (type == CompactThemeToggleType.header 
+            ? const EdgeInsets.all(8) 
+            : const EdgeInsets.all(4));
+    
     return AnimatedThemeToggle(
       size: size,
-      padding: const EdgeInsets.all(4),
+      padding: effectivePadding,
     );
   }
 }
 
-/// Version compacte du bouton de thème pour les headers
-class CompactThemeToggle extends StatelessWidget {
-  const CompactThemeToggle({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return const AnimatedThemeToggle(
-      size: 40,
-      padding: EdgeInsets.all(8),
-    );
-  }
+/// Types de boutons compacts disponibles
+enum CompactThemeToggleType {
+  toolbar,
+  header,
 }

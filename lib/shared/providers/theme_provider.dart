@@ -1,6 +1,7 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/services/haptic_service.dart';
+import '../../core/services/haptic_service.dart';
 
 /// Provider pour la gestion des thèmes avec persistance
 class ThemeProvider extends ChangeNotifier {
@@ -8,20 +9,35 @@ class ThemeProvider extends ChangeNotifier {
   
   bool _isDarkMode = false;
   SharedPreferences? _prefs;
+  bool _isInitialized = false;
 
   bool get isDarkMode => _isDarkMode;
+  bool get isInitialized => _isInitialized;
   
   ThemeMode get themeMode => _isDarkMode ? ThemeMode.dark : ThemeMode.light;
 
   /// Initialise le provider et charge les préférences
   Future<void> initialize() async {
-    _prefs = await SharedPreferences.getInstance();
-    _isDarkMode = _prefs?.getBool(_themeKey) ?? false;
-    notifyListeners();
+    try {
+      _prefs = await SharedPreferences.getInstance();
+      _isDarkMode = _prefs?.getBool(_themeKey) ?? false;
+      _isInitialized = true;
+      notifyListeners();
+    } catch (e) {
+      // En cas d'erreur, utiliser les valeurs par défaut
+      _isDarkMode = false;
+      _isInitialized = true;
+      notifyListeners();
+      debugPrint('Erreur lors de l\'initialisation des préférences de thème: $e');
+    }
   }
 
   /// Bascule entre les thèmes clair et sombre
   Future<void> toggleTheme() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+    
     _isDarkMode = !_isDarkMode;
     await _saveThemePreference();
     await HapticService.themeChange();
@@ -30,6 +46,10 @@ class ThemeProvider extends ChangeNotifier {
 
   /// Définit le thème explicitement
   Future<void> setTheme(bool isDark) async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+    
     if (_isDarkMode != isDark) {
       _isDarkMode = isDark;
       await _saveThemePreference();
@@ -40,7 +60,14 @@ class ThemeProvider extends ChangeNotifier {
 
   /// Sauvegarde la préférence de thème
   Future<void> _saveThemePreference() async {
-    await _prefs?.setBool(_themeKey, _isDarkMode);
+    try {
+      final prefs = _prefs;
+      if (prefs != null) {
+        await prefs.setBool(_themeKey, _isDarkMode);
+      }
+    } catch (e) {
+      debugPrint('Erreur lors de la sauvegarde des préférences de thème: $e');
+    }
   }
 
   /// Thème clair personnalisé

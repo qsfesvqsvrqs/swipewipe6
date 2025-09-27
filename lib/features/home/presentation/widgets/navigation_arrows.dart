@@ -79,7 +79,8 @@ class _NavigationArrowState extends State<NavigationArrow>
       curve: Curves.easeInOut,
     ));
 
-    _glowController.repeat(reverse: true);
+    // Animation glow uniquement lors du hover
+    // _glowController.repeat(reverse: true); // Supprimé pour économiser les ressources
   }
 
   @override
@@ -107,20 +108,26 @@ class _NavigationArrowState extends State<NavigationArrow>
   }
 
   void _handleTap() {
-    if (widget.onTap != null) {
+    final onTapCallback = widget.onTap;
+    if (onTapCallback != null) {
       HapticService.selectionClick();
-      widget.onTap!();
+      onTapCallback();
     }
   }
 
   void _handleHoverEnter(PointerEnterEvent event) {
     setState(() => _isHovered = true);
     _hoverController.forward();
+    // Démarrer l'animation glow lors du hover
+    _glowController.repeat(reverse: true);
   }
 
   void _handleHoverExit(PointerExitEvent event) {
     setState(() => _isHovered = false);
     _hoverController.reverse();
+    // Arrêter l'animation glow
+    _glowController.stop();
+    _glowController.reset();
   }
 
   double get _rotation {
@@ -200,20 +207,29 @@ class _NavigationArrowState extends State<NavigationArrow>
       },
     );
 
-    return MouseRegion(
-      onEnter: _handleHoverEnter,
-      onExit: _handleHoverExit,
-      child: GestureDetector(
-        onTapDown: _handleTapDown,
-        onTapUp: _handleTapUp,
-        onTapCancel: _handleTapCancel,
-        onTap: _handleTap,
-        child: widget.tooltip != null
-            ? Tooltip(
-                message: widget.tooltip!,
-                child: arrow,
-              )
-            : arrow,
+    return Semantics(
+      button: true,
+      enabled: widget.onTap != null,
+      label: widget.tooltip ?? 'Navigation ${widget.direction.name}',
+      hint: 'Appuyez pour naviguer',
+      child: MouseRegion(
+        onEnter: _handleHoverEnter,
+        onExit: _handleHoverExit,
+        child: GestureDetector(
+          onTapDown: _handleTapDown,
+          onTapUp: _handleTapUp,
+          onTapCancel: _handleTapCancel,
+          onTap: _handleTap,
+          child: () {
+            final tooltipMessage = widget.tooltip;
+            return tooltipMessage != null
+                ? Tooltip(
+                    message: tooltipMessage,
+                    child: arrow,
+                  )
+                : arrow;
+          }(),
+        ),
       ),
     );
   }

@@ -1,164 +1,113 @@
-import 'package:flutter/services.dart';
+// Flutter imports
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 
-/// Service de gestion du feedback haptique
-/// Fournit des vibrations subtiles et contextuelles
+// Core services
+import 'feedback_service.dart';
+
+/// Service de gestion du feedback haptique (Legacy)
+/// @deprecated Utilisez les services spécialisés : InteractionFeedbackService, 
+/// AnimationFeedbackService, SwipeFeedbackService, PhotoFeedbackService, SystemFeedbackService
+/// 
+/// Ce service est maintenu pour la compatibilité ascendante
 class HapticService {
   static const HapticService _instance = HapticService._internal();
   factory HapticService() => _instance;
   const HapticService._internal();
 
-  /// Feedback léger pour les interactions simples
-  /// Utilisé pour : tap sur boutons, sélection d'éléments
+  /// @deprecated Utilisez InteractionFeedbackService.buttonTap()
   static Future<void> lightImpact() async {
-    if (!kIsWeb) {
-      try {
-        await HapticFeedback.lightImpact();
-      } catch (e) {
-        debugPrint('Haptic feedback not available: $e');
-      }
-    }
+    await InteractionFeedbackService.buttonTap();
   }
 
-  /// Feedback moyen pour les actions importantes
-  /// Utilisé pour : swipe, changement d'état, navigation
+  /// @deprecated Utilisez InteractionFeedbackService.importantAction()
   static Future<void> mediumImpact() async {
-    if (!kIsWeb) {
-      try {
-        await HapticFeedback.mediumImpact();
-      } catch (e) {
-        debugPrint('Haptic feedback not available: $e');
-      }
-    }
+    await InteractionFeedbackService.importantAction();
   }
 
-  /// Feedback fort pour les actions critiques
-  /// Utilisé pour : suppression, erreurs, confirmations importantes
+  /// @deprecated Utilisez InteractionFeedbackService.criticalAction()
   static Future<void> heavyImpact() async {
-    if (!kIsWeb) {
-      try {
-        await HapticFeedback.heavyImpact();
-      } catch (e) {
-        debugPrint('Haptic feedback not available: $e');
-      }
-    }
+    await InteractionFeedbackService.criticalAction();
   }
 
-  /// Feedback de sélection pour les changements d'état
-  /// Utilisé pour : basculement de thème, sélection dans une liste
+  /// @deprecated Utilisez InteractionFeedbackService.itemSelection()
   static Future<void> selectionClick() async {
-    if (!kIsWeb) {
-      try {
-        await HapticFeedback.selectionClick();
-      } catch (e) {
-        debugPrint('Haptic feedback not available: $e');
-      }
-    }
+    await InteractionFeedbackService.itemSelection();
   }
 
-  /// Feedback personnalisé pour le swipe
-  /// Combine plusieurs types selon la direction et l'intensité
+  /// @deprecated Utilisez SwipeFeedbackService.swipe()
   static Future<void> swipeFeedback(SwipeDirection direction, SwipeIntensity intensity) async {
-    switch (intensity) {
-      case SwipeIntensity.light:
-        await lightImpact();
-        break;
-      case SwipeIntensity.medium:
-        await mediumImpact();
-        break;
-      case SwipeIntensity.heavy:
-        await heavyImpact();
-        break;
-    }
+    await SwipeFeedbackService.swipe(intensity);
   }
 
-  /// Feedback pour les transitions de page
+  /// @deprecated Utilisez AnimationFeedbackService.pageTransition()
   static Future<void> pageTransition() async {
-    await lightImpact();
+    await AnimationFeedbackService.pageTransition();
   }
 
-  /// Feedback pour les erreurs
+  /// @deprecated Utilisez SystemFeedbackService.error()
   static Future<void> error() async {
-    await heavyImpact();
-    // Double vibration pour les erreurs
-    await Future.delayed(const Duration(milliseconds: 100));
-    await mediumImpact();
+    await SystemFeedbackService.error();
   }
 
-  /// Feedback pour les succès
+  /// @deprecated Utilisez SystemFeedbackService.success()
   static Future<void> success() async {
-    await mediumImpact();
-    await Future.delayed(const Duration(milliseconds: 50));
-    await lightImpact();
+    await SystemFeedbackService.success();
   }
 
-  /// Feedback pour le début d'une action longue (comme le tri)
+  /// @deprecated Utilisez SwipeFeedbackService.sortStart()
   static Future<void> actionStart() async {
-    await mediumImpact();
+    await SwipeFeedbackService.sortStart();
   }
 
-  /// Feedback pour la fin d'une action longue
+  /// @deprecated Utilisez SwipeFeedbackService.sortComplete()
   static Future<void> actionComplete() async {
-    await lightImpact();
-    await Future.delayed(const Duration(milliseconds: 100));
-    await lightImpact();
+    await SwipeFeedbackService.sortComplete();
   }
 
-  /// Feedback très subtil pour les micro-interactions
+  /// @deprecated Utilisez InteractionFeedbackService.buttonTap()
   static Future<void> subtle() async {
-    if (!kIsWeb) {
-      try {
-        // Utilise la vibration la plus légère disponible
-        await HapticFeedback.lightImpact();
-      } catch (e) {
-        debugPrint('Haptic feedback not available: $e');
-      }
-    }
+    await InteractionFeedbackService.buttonTap();
   }
 
-  /// Feedback pour les animations de morphing d'icônes
+  /// @deprecated Utilisez AnimationFeedbackService.morphing()
   static Future<void> iconMorph() async {
-    await subtle();
+    await AnimationFeedbackService.morphing();
   }
 
-  /// Feedback pour les changements de thème
+  /// @deprecated Utilisez AnimationFeedbackService.themeChange()
   static Future<void> themeChange() async {
-    await selectionClick();
-    await Future.delayed(const Duration(milliseconds: 50));
-    await subtle();
+    await AnimationFeedbackService.themeChange();
   }
 
-  /// Feedback pour l'ouverture/fermeture de modales
+  /// @deprecated Utilisez AnimationFeedbackService.modalToggle()
   static Future<void> modalToggle() async {
-    await mediumImpact();
+    await AnimationFeedbackService.modalToggle();
   }
 
-  /// Feedback pour les gestes de restauration
+  /// @deprecated Utilisez PhotoFeedbackService.restorePhoto()
   static Future<void> restore() async {
-    await lightImpact();
-    await Future.delayed(const Duration(milliseconds: 80));
-    await lightImpact();
+    await PhotoFeedbackService.restorePhoto();
   }
 
-  /// Feedback pour l'ajout à un album
+  /// @deprecated Utilisez PhotoFeedbackService.addToAlbum()
   static Future<void> addToAlbum() async {
-    await mediumImpact();
+    await PhotoFeedbackService.addToAlbum();
   }
 
-  /// Feedback pour la suppression d'une photo
+  /// @deprecated Utilisez PhotoFeedbackService.deletePhoto()
   static Future<void> deletePhoto() async {
-    await heavyImpact();
+    await PhotoFeedbackService.deletePhoto();
   }
 
-  /// Feedback pour la sauvegarde d'une photo
+  /// @deprecated Utilisez PhotoFeedbackService.savePhoto()
   static Future<void> savePhoto() async {
-    await lightImpact();
-    await Future.delayed(const Duration(milliseconds: 60));
-    await subtle();
+    await PhotoFeedbackService.savePhoto();
   }
 }
 
 /// Directions de swipe pour le feedback haptique
+/// @deprecated Utilisez SwipeDirection dans feedback_service.dart
 enum SwipeDirection {
   left,
   right,
@@ -167,49 +116,9 @@ enum SwipeDirection {
 }
 
 /// Intensités de swipe pour le feedback haptique
+/// @deprecated Utilisez SwipeIntensity dans feedback_service.dart
 enum SwipeIntensity {
   light,
   medium,
   heavy,
-}
-
-/// Extension pour faciliter l'utilisation du feedback haptique
-extension HapticFeedbackExtension on Widget {
-  Widget withHapticFeedback({
-    required VoidCallback onTap,
-    HapticFeedbackType type = HapticFeedbackType.light,
-  }) {
-    return GestureDetector(
-      onTap: () async {
-        switch (type) {
-          case HapticFeedbackType.light:
-            await HapticService.lightImpact();
-            break;
-          case HapticFeedbackType.medium:
-            await HapticService.mediumImpact();
-            break;
-          case HapticFeedbackType.heavy:
-            await HapticService.heavyImpact();
-            break;
-          case HapticFeedbackType.selection:
-            await HapticService.selectionClick();
-            break;
-          case HapticFeedbackType.subtle:
-            await HapticService.subtle();
-            break;
-        }
-        onTap();
-      },
-      child: this,
-    );
-  }
-}
-
-/// Types de feedback haptique disponibles
-enum HapticFeedbackType {
-  light,
-  medium,
-  heavy,
-  selection,
-  subtle,
 }
