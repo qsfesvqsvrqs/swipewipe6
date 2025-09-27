@@ -120,12 +120,15 @@ class _AnimatedButtonState extends State<AnimatedButton>
     final backgroundColor = widget.backgroundColor ?? theme.colorScheme.primary;
     final foregroundColor = widget.foregroundColor ?? theme.colorScheme.onPrimary;
 
-    return GestureDetector(
-      onTapDown: _handleTapDown,
-      onTapUp: _handleTapUp,
-      onTapCancel: _handleTapCancel,
-      onTap: _handleTap,
-      child: AnimatedBuilder(
+    return Semantics(
+      button: true,
+      enabled: widget.onPressed != null,
+      child: GestureDetector(
+        onTapDown: _handleTapDown,
+        onTapUp: _handleTapUp,
+        onTapCancel: _handleTapCancel,
+        onTap: _handleTap,
+        child: AnimatedBuilder(
         animation: Listenable.merge([_scaleAnimation, _glowAnimation]),
         builder: (context, child) {
           return Transform.scale(

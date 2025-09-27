@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter_staggered_animations/flutter_staggered_animations.dart';
 
 import '../../../../shared/providers/theme_provider.dart';
+import '../../../../shared/utils/responsive_helper.dart';
 import '../../../../shared/widgets/animated_theme_toggle.dart';
 import '../../../../shared/widgets/animated_button.dart';
 import '../../../../shared/widgets/custom_icons.dart';
@@ -92,14 +93,15 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
         child: SafeArea(
-          child: Column(
-            children: [
-              // Header avec navigation et bouton de thème
-              _buildHeader(context),
-              
-              // Contenu principal
-              Expanded(
-                child: AnimationLimiter(
+          child: ResponsiveLayout(
+            child: Column(
+              children: [
+                // Header avec navigation et bouton de thème
+                _buildHeader(context),
+                
+                // Contenu principal
+                Expanded(
+                  child: AnimationLimiter(
                   child: Column(
                     children: AnimationConfiguration.toStaggeredList(
                       duration: const Duration(milliseconds: 600),
@@ -108,17 +110,17 @@ class _HomeScreenState extends State<HomeScreen>
                         child: FadeInAnimation(child: widget),
                       ),
                       children: [
-                        const SizedBox(height: 40),
+                        SizedBox(height: ResponsiveHelper.getVerticalSpacing(context) * 2.5),
                         
                         // Logo et titre
                         _buildLogo(context),
                         
-                        const SizedBox(height: 60),
+                        SizedBox(height: ResponsiveHelper.getVerticalSpacing(context) * 3.75),
                         
                         // Indicateur de stockage
                         const StorageIndicator(),
                         
-                        const SizedBox(height: 80),
+                        SizedBox(height: ResponsiveHelper.getVerticalSpacing(context) * 5),
                         
                         // Bouton principal
                         _buildMainButton(context),
@@ -128,13 +130,13 @@ class _HomeScreenState extends State<HomeScreen>
                         // Statistiques rapides
                         _buildQuickStats(context),
                         
-                        const SizedBox(height: 40),
+                        SizedBox(height: ResponsiveHelper.getVerticalSpacing(context) * 2.5),
                       ],
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -180,9 +182,16 @@ class _HomeScreenState extends State<HomeScreen>
         AnimatedBuilder(
           animation: _glowAnimation,
           builder: (context, child) {
+            final logoSize = ResponsiveHelper.responsive(
+              context,
+              mobile: 100.0,
+              tablet: 120.0,
+              desktop: 140.0,
+            );
+            
             return Container(
-              width: 120,
-              height: 120,
+              width: logoSize,
+              height: logoSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
@@ -216,22 +225,28 @@ class _HomeScreenState extends State<HomeScreen>
         const SizedBox(height: 24),
         
         // Titre
-        Text(
-          'SwipeWipe',
-          style: theme.textTheme.headlineLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: theme.colorScheme.onSurface,
-            letterSpacing: -0.5,
+        Semantics(
+          header: true,
+          child: Text(
+            'SwipeWipe',
+            style: theme.textTheme.headlineLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: theme.colorScheme.onSurface,
+              letterSpacing: -0.5,
+            ),
           ),
         ),
         
         const SizedBox(height: 8),
         
         // Sous-titre
-        Text(
-          'Triez vos photos en un geste',
-          style: theme.textTheme.bodyLarge?.copyWith(
-            color: theme.colorScheme.onSurface.withOpacity(0.7),
+        Semantics(
+          label: 'Description de l\'application : Triez vos photos en un geste',
+          child: Text(
+            'Triez vos photos en un geste',
+            style: theme.textTheme.bodyLarge?.copyWith(
+              color: theme.colorScheme.onSurface.withOpacity(0.7),
+            ),
           ),
         ),
       ],
@@ -242,14 +257,24 @@ class _HomeScreenState extends State<HomeScreen>
     final theme = Theme.of(context);
     
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 32),
+      padding: ResponsiveHelper.getHorizontalPadding(context),
       child: AnimatedButton(
         onPressed: _navigateToSwipe,
         backgroundColor: theme.colorScheme.primary,
         foregroundColor: theme.colorScheme.onPrimary,
-        padding: const EdgeInsets.symmetric(
-          horizontal: 48,
-          vertical: 20,
+        padding: EdgeInsets.symmetric(
+          horizontal: ResponsiveHelper.responsive(
+            context,
+            mobile: 32.0,
+            tablet: 48.0,
+            desktop: 64.0,
+          ),
+          vertical: ResponsiveHelper.responsive(
+            context,
+            mobile: 16.0,
+            tablet: 20.0,
+            desktop: 24.0,
+          ),
         ),
         borderRadius: BorderRadius.circular(16),
         enableGlow: true,

@@ -1,8 +1,16 @@
+// Flutter imports
 import 'package:flutter/material.dart';
+
+// Core services
+import '../../../../core/services/haptic_service.dart';
+
+// Shared widgets
+import '../../../../shared/utils/responsive_helper.dart';
 import '../../../../shared/widgets/animated_theme_toggle.dart';
 import '../../../../shared/widgets/custom_icons.dart';
+
+// Feature widgets
 import '../../../home/presentation/widgets/navigation_arrows.dart';
-import '../../../../core/services/haptic_service.dart';
 
 class SwipeScreen extends StatefulWidget {
   const SwipeScreen({super.key});
@@ -61,7 +69,8 @@ class _SwipeScreenState extends State<SwipeScreen>
           ),
         ),
         child: SafeArea(
-          child: Column(
+          child: ResponsiveLayout(
+            child: Column(
             children: [
               // Header avec navigation
               NavigationBar(
@@ -84,17 +93,22 @@ class _SwipeScreenState extends State<SwipeScreen>
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               CustomIcons.swipe(
-                                size: 80,
+                                size: ResponsiveHelper.responsive(
+                                  context,
+                                  mobile: 64.0,
+                                  tablet: 80.0,
+                                  desktop: 96.0,
+                                ),
                                 color: theme.colorScheme.primary,
                               ),
-                              const SizedBox(height: 24),
+                              SizedBox(height: ResponsiveHelper.getVerticalSpacing(context) * 1.5),
                               Text(
                                 'Écran de Tri',
                                 style: theme.textTheme.headlineMedium?.copyWith(
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              SizedBox(height: ResponsiveHelper.getVerticalSpacing(context)),
                               Text(
                                 'Interface de swipe en cours de développement',
                                 style: theme.textTheme.bodyLarge?.copyWith(
@@ -109,8 +123,8 @@ class _SwipeScreenState extends State<SwipeScreen>
                     },
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
